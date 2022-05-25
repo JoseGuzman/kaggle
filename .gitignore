@@ -32,4 +32,4 @@ minibrain.egg-info/
 # Kilosort (matlab) probe configuration files 
 # will be created with createXX_probes.m in ~/minibrain/Matlab/
 #=========================================================================
-*.mat
+*.DS_Store

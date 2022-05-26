@@ -29,7 +29,8 @@ minibrain.egg-info/
 .ipynb_checkpoints
 
 #=========================================================================
-# local OS files
+# local OS and Weights and Biases files
 #=========================================================================
 *.DS_Store
 wandb
+artifacts

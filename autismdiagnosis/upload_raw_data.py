@@ -75,7 +75,6 @@ run.finish()
 #=========================================================================
 # DATASET->pandas
 #=========================================================================
-run = wandb.init(project='ASD', entity='neurohost', job_type='load_data')
 
 # Data Loading
 def data_loader(file:Path, target:str=None, verbose:bool = False, **kwargs) -> Tuple[pd.DataFrame, pd.Series]:
@@ -119,9 +118,13 @@ def dataframeit_and_log(train_file:Path, test_file:Path, info:dict):
         train, train_target = data_loader(train_file, **info)
         test, _ = data_loader(file = test_file, target=None, verbose=True, index_col='ID')
 
-        pd_data.new_file( train.to_pickle('train.pkl') )
-        pd_data.new_file( train_target.to_pickle('train_target.pkl') )
-        pd_data.new_file( test.to_pickle('test.pkl') )
+        train.to_pickle('train.pkl')
+        train_target.to_pickle('train_target.pkl')
+        test.to_pickle('test.pkl')
+
+        pd_data.add_file( str('train.pkl') )
+        pd_data.add_file('test.pkl')
+        pd_data.add_file('train_target.pkl')
 
         run.log_artifact(pd_data)
 

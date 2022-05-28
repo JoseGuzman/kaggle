@@ -23,6 +23,63 @@ from reducing import PandaReducer
 
 KG_DATASET = 'autismdiagnosis'
 
+def data_loader(file:Path, target:str=None, verbose:bool = False, **kwargs) -> Tuple[pd.DataFrame, pd.Series]:
+    """
+    Loads csv file and return a tuple with a pandas dataset 
+    containing all features, and a pandas Series with the 
+    target variable.
+    """
+    
+    data = pd.read_csv(file, **kwargs)
+    df = PandaReducer().reduce(data) # see reduce.py in Utility Script 
+    
+    if target is not None:
+        out = (df[target]).astype(int)
+        df.drop([target], axis=1,  inplace=True) 
+    else:
+        out = target
+    
+    if verbose:
+        print('The dataset contains {0} entries and {1} features'.format(*df.shape))
+    
+    return df, out
+
+
+def dataframeit_and_log(train_file:Path, test_file:Path, info:dict):
+    """
+    creates dataframe versions from cvs files
+    info :
+        A dictionary with metadata to save
+    """
+
+    with wandb.init(project="ASD", entity='neurohost', job_type="load-data") as run:
+
+        pd_data = wandb.Artifact(
+            name = "dataframe", 
+            type = "dataset",
+            description = "Pandas DataFrame",
+            metadata = info)
+         
+        
+        train, train_target = data_loader(train_file, **info)
+        test, _ = data_loader(file = test_file, target=None, verbose=True, index_col='ID')
+
+        train.to_pickle('train.pkl')
+        train_target.to_pickle('train_target.pkl')
+        test.to_pickle('test.pkl')
+
+        pd_data.add_file( 'train.pkl' )
+        pd_data.add_file('test.pkl')
+        pd_data.add_file('train_target.pkl')
+        os.remove('train.pkl')
+        os.remove('train_target.pkl')
+        os.remove('test.pkl')
+
+        run.log_artifact(pd_data)
+
+#=========================================================================
+# login Kaggle if dataset is empty
+#=========================================================================
 # if directory empty:
 data_path = Path('../input/') / KG_DATASET # operator to extend path
 if data_path.exists():
@@ -75,58 +132,6 @@ run.finish()
 #=========================================================================
 # DATASET->pandas
 #=========================================================================
-
-# Data Loading
-def data_loader(file:Path, target:str=None, verbose:bool = False, **kwargs) -> Tuple[pd.DataFrame, pd.Series]:
-    """
-    Loads csv file and return a tuple with a pandas dataset 
-    containing all features, and a pandas Series with the 
-    target variable.
-    """
-    
-    data = pd.read_csv(file, **kwargs)
-    df = PandaReducer().reduce(data) # see reduce.py in Utility Script 
-    
-    if target is not None:
-        out = (df[target]).astype(int)
-        df.drop([target], axis=1,  inplace=True) 
-    else:
-        out = target
-    
-    if verbose:
-        print('The dataset contains {0} entries and {1} features'.format(*df.shape))
-    
-    return df, out
-
-
-def dataframeit_and_log(train_file:Path, test_file:Path, info:dict):
-    """
-    creates dataframe versions from cvs files
-    info :
-        A dictionary with metadata to save
-    """
-
-    with wandb.init(project="ASD", entity='neurohost', job_type="load-data") as run:
-
-        pd_data = wandb.Artifact(
-            name = "dataframe", 
-            type = "dataset",
-            description = "Pandas DataFrame",
-            metadata = info)
-         
-        
-        train, train_target = data_loader(train_file, **info)
-        test, _ = data_loader(file = test_file, target=None, verbose=True, index_col='ID')
-
-        train.to_pickle('train.pkl')
-        train_target.to_pickle('train_target.pkl')
-        test.to_pickle('test.pkl')
-
-        pd_data.add_file( str('train.pkl') )
-        pd_data.add_file('test.pkl')
-        pd_data.add_file('train_target.pkl')
-
-        run.log_artifact(pd_data)
 
 # declare which artifact we'll be using, if need be, download the artifact
 #raw_data = run.use_artifact('raw_data:latest').download()

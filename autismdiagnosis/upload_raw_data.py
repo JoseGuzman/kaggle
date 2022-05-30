@@ -1,8 +1,9 @@
 """
 upload_raw_data.py
 
-Upload competition data into raw_data and pandas
-into Weights and biases
+Upload competition data into wandb artifacts:
+* raw_data 
+* dataframe
 
 Author: Jose Guzman, sjm.guzman<at>gmail.com
 Created: Wed May 25 19:40:48 CEST 2022
@@ -45,37 +46,14 @@ def data_loader(file:Path, target:str=None, verbose:bool = False, **kwargs) -> T
     return df, out
 
 
-def dataframeit_and_log(train_file:Path, test_file:Path, info:dict):
+def dataframeit_and_log(train_file:Path, test_file:Path):
     """
-    creates dataframe versions from cvs files
+    creates dataframe versions from cvs files. It will go in the
+    artifact panel, into DATASET->dataframe
     info :
         A dictionary with metadata to save
     """
 
-    with wandb.init(project="ASD", entity='neurohost', job_type="load-data") as run:
-
-        pd_data = wandb.Artifact(
-            name = "dataframe", 
-            type = "dataset",
-            description = "Pandas DataFrame",
-            metadata = info)
-         
-        
-        train, train_target = data_loader(train_file, **info)
-        test, _ = data_loader(file = test_file, target=None, verbose=True, index_col='ID')
-
-        train.to_pickle('train.pkl')
-        train_target.to_pickle('train_target.pkl')
-        test.to_pickle('test.pkl')
-
-        pd_data.add_file( 'train.pkl' )
-        pd_data.add_file('test.pkl')
-        pd_data.add_file('train_target.pkl')
-        os.remove('train.pkl')
-        os.remove('train_target.pkl')
-        os.remove('test.pkl')
-
-        run.log_artifact(pd_data)
 
 #=========================================================================
 # login Kaggle if dataset is empty
@@ -109,34 +87,58 @@ wandb.login(key = mykey)
 # DATASET->raw_data
 #=========================================================================
 # 1. create a run 
-run = wandb.init(project='ASD', entity='neurohost', job_type='load_data')
+wandb_project = dict(project='ASD', entity='neurohost')
+with wandb.init(**wandb_project, job_type='load_data') as run:
 
-# 2. define name and type of artifact
-info = {'source': 'https://www.kaggle.com/competitions/autismdiagnosis'}
+    # 2. define name and type of artifact
+    info = {'source': 'https://www.kaggle.com/competitions/autismdiagnosis'}
 
-raw_data = wandb.Artifact(
-    name = 'raw_data',
-    type = 'dataset',
-    description = 'Based on Autism screening on adults dataset',
-    metadata = info
-    )
+    raw_data = wandb.Artifact(
+        name = 'raw_data',
+        type = 'dataset',
+        description = 'Based on Autism screening on adults dataset',
+        metadata = info
+        )
 
-# 3. operate the artifact
-raw_data.add_file( str(train_file) )
-raw_data.add_file( str(test_file) )
+    # 3. operate the artifact
+    raw_data.add_file( str(train_file) )
+    raw_data.add_file( str(test_file) )
 
-# 3. Save and log artifact
-run.log_artifact(raw_data)
-run.finish()
+    # 3. Save and log artifact
+    run.log_artifact(raw_data)
     
 #=========================================================================
 # DATASET->pandas
 #=========================================================================
+with wandb.init(project="ASD", entity='neurohost', job_type="load-data") as run:
+    # load and reduce panda DataFrame
+    train, train_target = data_loader(train_file, target='Class/ASD', index_col='ID')
+    test, _ = data_loader(file = test_file, target=None, verbose=True, index_col='ID')
 
-# declare which artifact we'll be using, if need be, download the artifact
-#raw_data = run.use_artifact('raw_data:latest').download()
-#train_file = Path(raw_data,'train.csv')
-#test_file = Path(raw_data,'test.csv')
+    info = {
+        'target':'Class/ASD', 
+        'index_col':'ID', 
+        'train_entries': train.shape[0], 
+        'test_entries': test.shape[0],
+        'features' : train.shape[1] 
+    }
 
-info = {'target':'Class/ASD', 'index_col':'ID'}
-dataframeit_and_log(train_file, test_file, info)
+    pd_data = wandb.Artifact(
+        name = "dataframe", 
+        type = "dataset",
+        description = "Pandas DataFrame",
+        metadata = info)
+     
+    
+    train.to_pickle('train.pkl')
+    train_target.to_pickle('train_target.pkl')
+    test.to_pickle('test.pkl')
+
+    pd_data.add_file( 'train.pkl' )
+    pd_data.add_file('test.pkl')
+    pd_data.add_file('train_target.pkl')
+    os.remove('train.pkl')
+    os.remove('train_target.pkl')
+    os.remove('test.pkl')
+
+    run.log_artifact(pd_data)

@@ -34,3 +34,4 @@ minibrain.egg-info/
 *.DS_Store
 wandb
 artifacts
+.vscode

@@ -108,7 +108,7 @@ with wandb.init(**wandb_project, job_type='load_data') as run:
     run.log_artifact(raw_data)
     
 #=========================================================================
-# DATASET->pandas
+# Log in Wandb DATASET->pandas
 #=========================================================================
 with wandb.init(project="ASD", entity='neurohost', job_type="load-data") as run:
     # load and reduce panda DataFrame

@@ -194,14 +194,18 @@ with wandb.init(project='ASD', entity='neurohost', job_type='preprocessing') as 
         metadata = info
     )
 
-    mynames = ('train.pkl', 'test.pkl')
+    mynames = ('train.csv', 'test.csv')
     for df, name  in zip((Xtrain, Xtest), mynames):
-        df.to_pickle(name)
+        df.to_csv(name)
         pre_data.add_file(name)
         os.remove(name)
 
+    train_target.to_csv('train_target.csv')
+    pre_data.add_file('train_target.csv')
+    os.remove('train_target.csv')
+
     # and a table
-    pp_table = wandb.Table(data = Xtrain.values, columns = Xtrain.columns.to_list())
-    run.log({'mytable': pp_table})
+    #pp_table = wandb.Table(data = Xtrain.values, columns = Xtrain.columns.to_list())
+    #run.log({'mytable': pp_table})
     run.log_artifact(pre_data)
     

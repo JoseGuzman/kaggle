@@ -7,6 +7,7 @@ into Weights and biases
 Author: Jose Guzman, sjm.guzman<at>gmail.com
 Created: Wed May 25 19:40:48 CEST 2022
 
+try python -m sklearnex preprocessing.py to run faster
  
 """
 import numpy as np, pandas as pd
@@ -76,10 +77,10 @@ def remove_prefix(mystring:str)->str:
 #=========================================================================
 # login Weights and biases
 #=========================================================================
-wandb_path = Path('~/.wandb/wandb.json').expanduser()
-with open(wandb_path) as fp:
-    mykey = json.load(fp)['key']
-wandb.login(key = mykey)
+#wandb_path = Path('~/.wandb/wandb.json').expanduser()
+#with open(wandb_path) as fp:
+#    mykey = json.load(fp)['key']
+#wandb.login(key = mykey)
 
 #=========================================================================
 # Load austism-diagnosis pandas dataframe
@@ -196,13 +197,13 @@ with wandb.init(project='ASD', entity='neurohost', job_type='preprocessing') as 
 
     mynames = ('train.csv', 'test.csv')
     for df, name  in zip((Xtrain, Xtest), mynames):
-        df.to_csv(name)
+        df.to_csv(name, header=True)
         pre_data.add_file(name)
-        os.remove(name)
+        #os.remove(name)
 
-    train_target.to_csv('train_target.csv')
+    train_target.to_csv('train_target.csv', header=True)
     pre_data.add_file('train_target.csv')
-    os.remove('train_target.csv')
+    #os.remove('train_target.csv')
 
     # and a table
     #pp_table = wandb.Table(data = Xtrain.values, columns = Xtrain.columns.to_list())

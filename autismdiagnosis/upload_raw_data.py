@@ -78,10 +78,10 @@ else:
 #=========================================================================
 # login Weights and biases
 #=========================================================================
-wandb_path = Path('~/.wandb/wandb.json').expanduser()
-with open(wandb_path) as fp:
-    mykey = json.load(fp)['key']
-wandb.login(key = mykey)
+#wandb_path = Path('~/.wandb/wandb.json').expanduser()
+#with open(wandb_path) as fp:
+#    mykey = json.load(fp)['key']
+#wandb.login(key = mykey)
 
 #=========================================================================
 # DATASET->raw_data
